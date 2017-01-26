@@ -24,9 +24,9 @@ Tail Heroku logs:
 Call
 ----
 
-Test sending JSON data with POST using Curl:
+Populate db with sample data (replace host & apikey):
 
-    curl -H "Content-Type: application/json" -X POST -d '{"key":"value","key2":"value2"}' 192.168.56.10:5000/post?apikey=YOUR-APIKEY
+    curl -H "Content-Type: application/json" -X POST -d '{"placeId": "FM", "type":"tower","name":"Fiskarsinmäen lintutorni", "ornithologicalSociety":"tringa", "lat": 60.176438, "lon": 24.571117}' 'BOWERBIRD_HOST/post?apikey=BOWERBIRD_APIKEY&bowerbird_set=cit_places'
 
 TODO
 ====
