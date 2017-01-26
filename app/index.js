@@ -22,5 +22,9 @@ function startServer(err) {
 }
 
 function requestHandler(request, response) {
-    response.end(JSON.parse({"answer" : "Hoi maailma!"));
+    response.end(
+        JSON.stringify(
+            { "answer" : "Hoi maailma!" }
+            )
+    );
 }
