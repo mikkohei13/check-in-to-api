@@ -1,47 +1,61 @@
-
 const url = require("url");
 const querystring = require("querystring");
+var hash33 = require("hash-string")
 const mongo = require("./mongo");
 
 function requestHandler(request, response) {
-    let getParameters = { "response" : response };
-    get.init(getParameters);
-
     let urlParts = url.parse(request.url);
     let queryParts = querystring.parse(urlParts.query);
     let pathname = urlParts.pathname;
     let pathParts = pathToArray(pathname);
 
+    // ------------------------------------------------------------------
+    // Find place
     if ("place" == pathParts[1] && "GET" == request.method) {
         mongo.find({"placeId": pathParts[2]}, response);
     }
+    // ------------------------------------------------------------------
+    // Insert check-in to a place
+    else if ("check-in" == pathParts[1] && "GET" == request.method) {
+
+        // Create check-in object
+        let checkIn = {
+            "type" : "check-in",
+            "placeId" : pathParts[2]
+        };
+//        checkIn.userId = shortHash("email@example.com"); // Later when there are users...
+        checkIn.unixtime = Date.now();
+        checkIn.checkInId = shortHash(Math.random()); // Todo: better random hash?
+
+//        response.end(JSON.stringify(checkIn));
+
+        mongo.insert(checkIn);
+        response.end("CHECK-IN " + JSON.stringify(checkIn));
+    }
+    // ------------------------------------------------------------------
+    // Seed with testing data
     else if ("seed" == pathParts[1] && "GET" == request.method) {
         let place = {
-            "placeId": "LM",
-            "type":"tower",
-            "name":"Maarin lintutorni, Laajalahti",
-            "ornithologicalSociety":"tringa",
-            "lat": 60.189483,
-            "lon": 24.818959
+            // Seed place here
         };
         mongo.insert(place);
         response.end("SEEDING NOW");
     }
-
+    // ------------------------------------------------------------------
+    // Not found
     else {
         console.log(pathParts);
         response.end("404");
     }
 }
 
+function shortHash(input) {
+    let since = Math.floor((Date.now() - 1485462732505)/1000);
+    return (hash33(input + process.env.SALT + since).toString(36)) + "-" + since;
+}
+
 // Return path direcotries in a array. Note that [0] is always empty.
 function pathToArray(pathname) {
-    /*
-    if ("/favicon.ico" == pathname) {
-        return false;
-    }
-    */
-
     let pathParts = pathname.split("/");
     return pathParts;
 }

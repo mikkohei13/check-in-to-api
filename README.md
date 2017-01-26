@@ -31,3 +31,5 @@ Populate db with sample data (replace host & apikey):
 TODO
 ====
 
+- Throttling (ip?)
+- Spead into different collections?

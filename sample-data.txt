@@ -1,0 +1,40 @@
+
+    let checkIn = {
+        "type": "check-in",
+        "placeId": "FM",
+        "unixtime": ,
+        "checkInId": ,
+        "userId":
+    };
+
+-------------------------------------
+
+    let place = {
+        "type": "place"
+        "placeId": "FM",
+        "placeType": "tower",
+        "name": "Fiskarsinmäen lintutorni",
+        "ornithologicalSociety": "tringa",
+        "lat": 60.176438,
+        "lon": 24.571117
+    };
+
+    let place = {
+        "type": "place"
+        "placeId": "SE",
+        "placeType": "tower",
+        "name":"Suomenojan eteläinen lintutorni",
+        "ornithologicalSociety":"tringa",
+        "lat": 60.151203,
+        "lon": 24.718524
+    };
+
+    let place = {
+        "type": "place"
+        "placeId": "LM",
+        "placeType": "tower",
+        "name":"Maarin lintutorni, Laajalahti",
+        "ornithologicalSociety":"tringa",
+        "lat": 60.189483,
+        "lon": 24.818959
+    };
