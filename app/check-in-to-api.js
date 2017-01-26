@@ -1,6 +1,6 @@
 const url = require("url");
 const querystring = require("querystring");
-var hash33 = require("hash-string")
+const hash33 = require("hash-string");
 const mongo = require("./mongo");
 
 function requestHandler(request, response) {
@@ -21,16 +21,14 @@ function requestHandler(request, response) {
         // Create check-in object
         let checkIn = {
             "type" : "check-in",
-            "placeId" : pathParts[2]
+            "placeId" : pathParts[2],
+            "checkInId" : shortHash(Math.random().toString(10), "no salt")
         };
-//        checkIn.userId = shortHash("email@example.com"); // Later when there are users...
-        checkIn.unixtime = Date.now();
-        checkIn.checkInId = shortHash(Math.random()); // Todo: better random hash?
-
+//        checkIn.userId = shortHash("email@example.com", process.env.SALT); // Later when there are users...
 //        response.end(JSON.stringify(checkIn));
 
-        mongo.insert(checkIn);
-        response.end("CHECK-IN " + JSON.stringify(checkIn));
+        mongo.insert(checkIn, request);
+        response.end("CHECKING IN NOW: " + JSON.stringify(checkIn));
     }
     // ------------------------------------------------------------------
     // Seed with testing data
@@ -39,7 +37,7 @@ function requestHandler(request, response) {
             // Seed place here
         };
         mongo.insert(place);
-        response.end("SEEDING NOW");
+        response.end("SEEDING NOW: " + JSON.stringify(place));
     }
     // ------------------------------------------------------------------
     // Not found
@@ -49,9 +47,9 @@ function requestHandler(request, response) {
     }
 }
 
-function shortHash(input) {
-    let since = Math.floor((Date.now() - 1485462732505)/1000);
-    return (hash33(input + process.env.SALT + since).toString(36)) + "-" + since;
+function shortHash(input, salt) {
+    let since = Math.floor((Date.now() - 1485462732505)/1000); // some more uniqueness
+    return (hash33(input + salt + since).toString(36)) + "-" + since;
 }
 
 // Return path direcotries in a array. Note that [0] is always empty.

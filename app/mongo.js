@@ -1,8 +1,15 @@
 const MongoClient = require('mongodb').MongoClient;
 
-function insert(payloadObj) {
+function insert(payloadObj, request = false) {
 
     // Todo: async mongodb operations with promises?
+
+    // Add metadata, if available
+    if (request) {
+        payloadObj.insertTime = Date.now();
+        payloadObj.insertIP = request.connection.remoteAddress;
+        payloadObj.insertUA = request.headers['user-agent'];
+    }
 
     MongoClient.connect(process.env.MLAB_CONNECTION, function(err, db) {
         if (err) {
