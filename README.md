@@ -21,16 +21,13 @@ Tail Heroku logs:
 
 	heroku logs --tail
 
-Call
-----
-
-Populate db with sample data (replace host & apikey):
-
-    curl -H "Content-Type: application/json" -X POST -d '{"placeId": "FM", "type":"tower","name":"Fiskarsinmäen lintutorni", "ornithologicalSociety":"tringa", "lat": 60.176438, "lon": 24.571117}' 'BOWERBIRD_HOST/post?apikey=BOWERBIRD_APIKEY&bowerbird_set=cit_places'
 
 TODO
 ====
 
-- Security
-- Throttling (ip?)
+- Inserts with post (when closer to production use)
+- Security:
+    - Encode/validate user input before use
+    - Headers: https://blog.risingstack.com/node-hero-node-js-security-tutorial/
+- Throttling (ip?) - where to save?
 - Spead into different collections?

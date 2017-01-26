@@ -11,6 +11,7 @@
   "dependencies": {
     "hash-string": "^1.0.0",
     "mongodb": "^2.2.22",
-    "mysql": "^2.13.0"
+    "mysql": "^2.13.0",
+    "validator": "^6.2.1"
   }
 }

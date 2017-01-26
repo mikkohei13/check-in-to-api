@@ -1,6 +1,7 @@
 const url = require("url");
 const querystring = require("querystring");
 const hash33 = require("hash-string");
+const validator = require("validator");
 const mongo = require("./mongo");
 
 function requestHandler(request, response) {
@@ -12,11 +13,25 @@ function requestHandler(request, response) {
     // ------------------------------------------------------------------
     // Find place
     if ("place" == pathParts[1] && "GET" == request.method) {
-        mongo.find({"placeId": pathParts[2]}, response);
+
+        // Validation
+        if (!validator.isAlphanumeric(pathParts[2])) {
+            return; // Todo: app-wide error handler? (how to scope?)
+        }
+
+        mongo.find({
+            "placeId" : pathParts[2],
+            "type" : "place"
+        }, response);
     }
     // ------------------------------------------------------------------
     // Insert check-in to a place
     else if ("check-in" == pathParts[1] && "GET" == request.method) {
+
+        // Validation
+        if (!validator.isAlphanumeric(pathParts[2])) {
+            return; // Todo: app-wide error handler? (how to scope?)
+        }
 
         // Create check-in object
         let checkIn = {
