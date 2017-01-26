@@ -2,6 +2,7 @@
 let port = 3000;
 
 const http = require('http');
+const api = require('./check-in-to-api');
 
 if (process.env.PORT) {
   port = process.env.PORT;
@@ -22,9 +23,5 @@ function startServer(err) {
 }
 
 function requestHandler(request, response) {
-    response.end(
-        JSON.stringify(
-            { "answer" : "Hoi maailma!" }
-            )
-    );
+    api.requestHandler(request, response);
 }
