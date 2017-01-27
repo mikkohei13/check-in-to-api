@@ -31,3 +31,7 @@ TODO
     - Headers: https://blog.risingstack.com/node-hero-node-js-security-tutorial/
 - Throttling (ip?) - where to save?
 - Spead into different collections?
+
+Later:
+
+- If places are imported & updated from external source(s), each must have an unique, persisten identifier. This then should be mapped into a short, human-readable identifiers, preferably capital letters.

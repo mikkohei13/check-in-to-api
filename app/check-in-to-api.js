@@ -10,6 +10,8 @@ function requestHandler(request, response) {
     let pathname = urlParts.pathname;
     let pathParts = pathToArray(pathname);
 
+    mongo.init({"request": request, "response": response});
+
     // ------------------------------------------------------------------
     // Find place
     if ("place" == pathParts[1] && "GET" == request.method) {
@@ -20,9 +22,9 @@ function requestHandler(request, response) {
         }
 
         mongo.find({
-            "placeId" : pathParts[2],
+            "placeCode" : pathParts[2],
             "type" : "place"
-        }, response);
+        }, "MLAB_COLL_PLACES");
     }
     // ------------------------------------------------------------------
     // Insert check-in to a place
@@ -36,22 +38,28 @@ function requestHandler(request, response) {
         // Create check-in object
         let checkIn = {
             "type" : "check-in",
-            "placeId" : pathParts[2],
-            "checkInId" : shortHash(Math.random().toString(10), "no salt")
+            "placeCode" : pathParts[2]/*,
+            "checkInId" : shortHash(Math.random().toString(10), "no salt")*/
         };
 //        checkIn.userId = shortHash("email@example.com", process.env.SALT); // Later when there are users...
 //        response.end(JSON.stringify(checkIn));
 
-        mongo.insert(checkIn, request);
+        mongo.insert(checkIn, "MLAB_COLL_CHECKINS");
         response.end("CHECKING IN NOW: " + JSON.stringify(checkIn));
     }
     // ------------------------------------------------------------------
     // Seed with testing data
     else if ("seed" == pathParts[1] && "GET" == request.method) {
         let place = {
-            // Seed place here
+            "type": "place",
+            "placeCode": "FM",
+            "placeType": "tower",
+            "name": "Fiskarsinmäen lintutorni",
+            "ornithologicalSociety": "tringa",
+            "lat": 60.176438,
+            "lon": 24.571117
         };
-        mongo.insert(place);
+        mongo.insert(place, "MLAB_COLL_PLACES");
         response.end("SEEDING NOW: " + JSON.stringify(place));
     }
     // ------------------------------------------------------------------

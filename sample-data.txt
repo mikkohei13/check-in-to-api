@@ -1,7 +1,7 @@
 
     let checkIn = {
         "type": "check-in",
-        "placeId": "FM",
+        "placeCode": "FM",
         "unixtime": ,
         "checkInId": ,
         "userId":
@@ -10,8 +10,8 @@
 -------------------------------------
 
     let place = {
-        "type": "place"
-        "placeId": "FM",
+        "type": "place",
+        "placeCode": "FM",
         "placeType": "tower",
         "name": "Fiskarsinmäen lintutorni",
         "ornithologicalSociety": "tringa",
@@ -20,8 +20,8 @@
     };
 
     let place = {
-        "type": "place"
-        "placeId": "SE",
+        "type": "place",
+        "placeCode": "SE",
         "placeType": "tower",
         "name":"Suomenojan eteläinen lintutorni",
         "ornithologicalSociety":"tringa",
@@ -30,8 +30,8 @@
     };
 
     let place = {
-        "type": "place"
-        "placeId": "LM",
+        "type": "place",
+        "placeCode": "LM",
         "placeType": "tower",
         "name":"Maarin lintutorni, Laajalahti",
         "ornithologicalSociety":"tringa",
