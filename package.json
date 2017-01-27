@@ -9,6 +9,7 @@
   "author": "Mikko Heikkinen/biomi.org",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.1.4",
     "hash-string": "^1.0.0",
     "mongodb": "^2.2.22",
     "mysql": "^2.13.0",

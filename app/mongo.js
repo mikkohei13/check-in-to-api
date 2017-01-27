@@ -1,7 +1,9 @@
 const MongoClient = require('mongodb').MongoClient;
+const parallel = require('async/parallel');
 
 // Todo: async mongodb operations with promises? Then get rid of init, also form exports section
 // See: http://stackoverflow.com/questions/35246713/node-js-mongo-find-and-return-data
+// See: mongoose?
 
 let parameters;
 
@@ -29,6 +31,7 @@ function insert(payloadObj, coll) {
                 }
                 else
                 {
+                    // Todo: return check-in identifier
                     console.log(result);
                 }
                 db.close();
@@ -61,48 +64,75 @@ function find(findObj, coll) {
     });
 }
 
-function findPreviousCheckInsOfIP(ip) {
-    let hours = 6;
-    let time = Date.now() - hours * 60 * 60 * 1000;
-    let findObj = {
-        "insertIP" : ip,
+function checkInThrottled(placeCode, payloadObj) {
+
+
+    // Todo: Check that the placeCode exists, do this parallel to finding user data
+
+    // Settings
+    const previousCheckInLimitThisPlaceHours = 6;
+    const previousCheckInLimitMinutes = 1;
+
+    // Query
+    const lastThisPlaceLimitMs = 1000*60*60 * previousCheckInLimitThisPlaceHours;
+    const lastLimitMs = 1000*60 * previousCheckInLimitMinutes;
+
+    const findObj = {
+        "insertIP" : parameters.request.connection.remoteAddress,
         "insertTime" : {
-            $gt: time
+            $gt: Date.now() - lastThisPlaceLimitMs
         }
     };
 
-    let connectionPromise = MongoClient.connect(process.env.MLAB_CONNECTION);
+    MongoClient.connect(process.env.MLAB_CONNECTION, function(err, db) {
+        if (err) {
+            console.log(err, 503, "Database connection failed.");
+        }
+        else {
+            let collection = db.collection(process.env.MLAB_COLL_CHECKINS);
 
-    let database;
-    connectionPromise
-        .then((db)=>{
-            database = db;
-            return db.collection(process.env.MLAB_COLL_CHECKINS);
-        })
-        .then((collection)=>{
-            return collection.find(findObj).toArray();
-        })
-        .then((result)=>{
-            database.close();
-            console.log("res:"+result);
-            return result;
-        })
-        .catch((err)=>{
-            console.log("ERROR:" + err);
-        });
-/*
-        function(db) {
-        db.collection(process.env.MLAB_COLL_CHECKINS).find(findObj).toArray().then(function(result) {
-//          parameters.response.setHeader('content-type', 'application/json');
-//            parameters.response.end(JSON.stringify(result));
-//            console.log(result);
-            console.log("FOO:");
-            console.log(result);
-            return result;
-        });
-        db.close();
+            // Find previous check-ins by the ip address
+            collection.find(findObj).toArray(function(err, result) {
+                if(err) {
+                    console.log(err, 500, "Database operation failed.");
+                }
+                else
+                {
+                    // Analyze data
+                    console.log("HERE:" + JSON.stringify(result));
+
+                    // Defaults for no check-ins
+                    let lastCheckInTime = 0;
+                    let lastCheckInTimeThisPlace = 0;
+
+                    // get latest check-ins from documents
+                    result.forEach(function(document) {
+                        if (document.insertTime > lastCheckInTime) {
+                            lastCheckInTime = document.insertTime;
+                        }
+                        if (document.placeCode == placeCode && document.insertTime > lastCheckInTimeThisPlace) {
+                            lastCheckInTimeThisPlace = document.insertTime;
+                        }
+                    });
+
+                    // Compare are check-ins too close
+                    if (lastCheckInTime > (Date.now() - lastLimitMs)) {
+                        console.log("Too early, last was " + lastCheckInTime);
+                    }
+                    else if (lastCheckInTimeThisPlace > (Date.now() - lastThisPlaceLimitMs)) {
+                        console.log("Too early at this place, last was " + lastCheckInTimeThisPlace);
+                    }
+                    else {
+                        console.log("Doing check-in...");
+                        insert(payloadObj, "MLAB_COLL_CHECKINS");
+                    }
+
+                    parameters.response.end(JSON.stringify(result));
+                }
+                db.close();
+            });
+        }
     });
-    */
 }
 
 
@@ -114,5 +144,5 @@ module.exports = {
     "init" : init,
     "insert" : insert,
     "find" : find,
-    "findPreviousCheckInsOfIP" : findPreviousCheckInsOfIP
+    "checkInThrottled" : checkInThrottled
 };

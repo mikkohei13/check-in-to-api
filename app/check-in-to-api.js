@@ -65,7 +65,30 @@ function requestHandler(request, response) {
     // ------------------------------------------------------------------
     // Test
     else if ("test" == pathParts[1] && "GET" == request.method) {
-        mongo.findPreviousCheckInsOfIP(request.connection.remoteAddress);
+        /*
+        Needed:
+        - find ip's checkins during the last 6 hours
+        - pick the latest
+        - pick the latest to this one
+        - if latest < 15 min || latest to this one < 6 h
+            end with error
+        - else
+            do a check-in
+        */
+
+        // Validation
+        if (!validator.isAlphanumeric(pathParts[2])) {
+            return; // Todo: app-wide error handler? (how to scope?)
+        }
+
+        // Create check-in object
+        let checkIn = {
+            "type" : "check-in",
+            "placeCode" : pathParts[2]/*,
+             "checkInId" : shortHash(Math.random().toString(10), "no salt")*/
+        };
+
+        mongo.checkInThrottled(pathParts[2], checkIn);
     }
     // ------------------------------------------------------------------
     // Not found
