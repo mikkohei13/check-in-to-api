@@ -29,8 +29,7 @@ TODO
 - Security:
     - Encode/validate user input before use
     - Headers: https://blog.risingstack.com/node-hero-node-js-security-tutorial/
-- Throttling (ip?) - where to save?
-- Spead into different collections?
+- Throttling (ip?) - where to save? Use check-in data
 
 Later:
 

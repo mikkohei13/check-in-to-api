@@ -63,6 +63,11 @@ function requestHandler(request, response) {
         response.end("SEEDING NOW: " + JSON.stringify(place));
     }
     // ------------------------------------------------------------------
+    // Test
+    else if ("test" == pathParts[1] && "GET" == request.method) {
+        mongo.findPreviousCheckInsOfIP(request.connection.remoteAddress);
+    }
+    // ------------------------------------------------------------------
     // Not found
     else {
         console.log(pathParts);
