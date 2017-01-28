@@ -66,8 +66,8 @@ function find(findObj, coll) {
 
 function checkInThrottled(placeCode, payloadObj) {
 
-
     // Todo: Check that the placeCode exists, do this parallel to finding user data
+    // Todo: handle all errors similarly?
 
     // Settings
     const previousCheckInLimitThisPlaceHours = 6;
@@ -77,11 +77,15 @@ function checkInThrottled(placeCode, payloadObj) {
     const lastThisPlaceLimitMs = 1000*60*60 * previousCheckInLimitThisPlaceHours;
     const lastLimitMs = 1000*60 * previousCheckInLimitMinutes;
 
-    const findObj = {
+    const findCheckIns = {
         "insertIP" : parameters.request.connection.remoteAddress,
         "insertTime" : {
             $gt: Date.now() - lastThisPlaceLimitMs
         }
+    };
+
+    const findPlaceCode = {
+        "placeCode" : placeCode
     };
 
     MongoClient.connect(process.env.MLAB_CONNECTION, function(err, db) {
@@ -89,45 +93,61 @@ function checkInThrottled(placeCode, payloadObj) {
             console.log(err, 503, "Database connection failed.");
         }
         else {
-            let collection = db.collection(process.env.MLAB_COLL_CHECKINS);
-
-            // Find previous check-ins by the ip address
-            collection.find(findObj).toArray(function(err, result) {
+            // ABBA async parallel
+            parallel({
+                "checkIns": function(callback) {
+                    let collection = db.collection(process.env.MLAB_COLL_CHECKINS);
+                    collection.find(findCheckIns).toArray(callback);
+                },
+                "places": function(callback) {
+                    let collection = db.collection(process.env.MLAB_COLL_PLACES);
+                    collection.find(findPlaceCode).toArray(callback);
+                }
+            }, function(err, resultObj) {
                 if(err) {
                     console.log(err, 500, "Database operation failed.");
                 }
                 else
                 {
-                    // Analyze data
-                    console.log("HERE:" + JSON.stringify(result));
+                    // If place not found
+                    if (typeof resultObj.places[0] !== "object") {
+                        console.log("Place not found");
+                        parameters.response.end(JSON.stringify({"error":"place not found"}));
+                    }
+                    else
+                    {
+                        // Analyze data
+                        console.log("HERE:" + JSON.stringify(resultObj.checkIns));
 
-                    // Defaults for no check-ins
-                    let lastCheckInTime = 0;
-                    let lastCheckInTimeThisPlace = 0;
+                        // Defaults for no check-ins
+                        let lastCheckInTime = 0;
+                        let lastCheckInTimeThisPlace = 0;
 
-                    // get latest check-ins from documents
-                    result.forEach(function(document) {
-                        if (document.insertTime > lastCheckInTime) {
-                            lastCheckInTime = document.insertTime;
+                        // get latest check-ins from documents
+                        resultObj.checkIns.forEach(function(document) {
+                            if (document.insertTime > lastCheckInTime) {
+                                lastCheckInTime = document.insertTime;
+                            }
+                            if (document.placeCode == placeCode && document.insertTime > lastCheckInTimeThisPlace) {
+                                lastCheckInTimeThisPlace = document.insertTime;
+                            }
+                        });
+
+                        // Compare are check-ins too close
+                        if (lastCheckInTime > (Date.now() - lastLimitMs)) {
+                            console.log("Too early, last was " + lastCheckInTime);
                         }
-                        if (document.placeCode == placeCode && document.insertTime > lastCheckInTimeThisPlace) {
-                            lastCheckInTimeThisPlace = document.insertTime;
+                        else if (lastCheckInTimeThisPlace > (Date.now() - lastThisPlaceLimitMs)) {
+                            console.log("Too early at this place, last was " + lastCheckInTimeThisPlace);
                         }
-                    });
+                        else {
+                            // All is ok, insert check-in
+                            console.log("Doing check-in...");
+                            insert(payloadObj, "MLAB_COLL_CHECKINS");
+                        }
 
-                    // Compare are check-ins too close
-                    if (lastCheckInTime > (Date.now() - lastLimitMs)) {
-                        console.log("Too early, last was " + lastCheckInTime);
+                        parameters.response.end(JSON.stringify(resultObj));
                     }
-                    else if (lastCheckInTimeThisPlace > (Date.now() - lastThisPlaceLimitMs)) {
-                        console.log("Too early at this place, last was " + lastCheckInTimeThisPlace);
-                    }
-                    else {
-                        console.log("Doing check-in...");
-                        insert(payloadObj, "MLAB_COLL_CHECKINS");
-                    }
-
-                    parameters.response.end(JSON.stringify(result));
                 }
                 db.close();
             });
